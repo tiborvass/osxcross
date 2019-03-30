@@ -83,6 +83,7 @@ fi
 OSXCROSS_VERSION=0.15
 
 X86_64H_SUPPORTED=0
+I386_SUPPORTED=1
 
 case $SDK_VERSION in
   10.4*) TARGET=darwin8 ;;
@@ -95,7 +96,7 @@ case $SDK_VERSION in
   10.11*) TARGET=darwin15; X86_64H_SUPPORTED=1; ;;
   10.12*) TARGET=darwin16; X86_64H_SUPPORTED=1; ;;
   10.13*) TARGET=darwin17; X86_64H_SUPPORTED=1; ;;
-  10.14*) TARGET=darwin18; X86_64H_SUPPORTED=1; ;;
+  10.14*) TARGET=darwin18; X86_64H_SUPPORTED=1; I386_SUPPORTED=0; ;;
 *) echo "Invalid SDK Version" && exit 1 ;;
 esac
 
@@ -340,10 +341,14 @@ create_symlink osxcross-cmake "$TARGET_DIR/bin/x86_64-apple-$TARGET-cmake"
 
 unset MACOSX_DEPLOYMENT_TARGET
 
-test_compiler o32-clang $BASE_DIR/oclang/test.c
+if [ $I386_SUPPORTED -eq 1 ]; then
+  test_compiler o32-clang $BASE_DIR/oclang/test.c
+fi
 test_compiler o64-clang $BASE_DIR/oclang/test.c
 
-test_compiler o32-clang++ $BASE_DIR/oclang/test.cpp
+if [ $I386_SUPPORTED -eq 1 ]; then
+  test_compiler o32-clang++ $BASE_DIR/oclang/test.cpp
+fi
 test_compiler o64-clang++ $BASE_DIR/oclang/test.cpp
 
 if [ $(osxcross-cmp ${SDK_VERSION/u/} ">=" 10.7) -eq 1 ]; then
@@ -355,7 +360,9 @@ if [ $(osxcross-cmp ${SDK_VERSION/u/} ">=" 10.7) -eq 1 ]; then
     echo "'tools/gen_sdk_package.sh' on OS X"
   fi
   echo ""
-  test_compiler_cxx11 o32-clang++ $BASE_DIR/oclang/test_libcxx.cpp
+  if [ $I386_SUPPORTED -eq 1 ]; then
+    test_compiler_cxx11 o32-clang++ $BASE_DIR/oclang/test_libcxx.cpp
+  fi
   test_compiler_cxx11 o64-clang++ $BASE_DIR/oclang/test_libcxx.cpp
 fi
 
@@ -367,12 +374,21 @@ echo ""
 echo "to your PATH variable."
 echo ""
 
-echo "All done! Now you can use o32-clang(++) and o64-clang(++) like a normal compiler."
+if [ $I386_SUPPORTED -eq 1 ]; then
+  echo "All done! Now you can use o32-clang(++) and o64-clang(++) like a normal compiler."
+else
+  echo "All done! Now you can use o64-clang(++) like a normal compiler."
+fi
 echo ""
 echo "Example usage:"
 echo ""
-echo "Example 1: CC=o32-clang ./configure --host=i386-apple-$TARGET"
-echo "Example 2: CC=i386-apple-$TARGET-clang ./configure --host=i386-apple-$TARGET"
-echo "Example 3: o64-clang -Wall test.c -o test"
-echo "Example 4: x86_64-apple-$TARGET-strip -x test"
+if [ $I386_SUPPORTED -eq 1 ]; then
+  echo "Example 1: CC=o32-clang ./configure --host=i386-apple-$TARGET"
+  echo "Example 2: CC=i386-apple-$TARGET-clang ./configure --host=i386-apple-$TARGET"
+  echo "Example 3: o64-clang -Wall test.c -o test"
+  echo "Example 4: x86_64-apple-$TARGET-strip -x test"
+else
+  echo "Example 1: o64-clang -Wall test.c -o test"
+  echo "Example 2: x86_64-apple-$TARGET-strip -x test"
+fi
 echo ""

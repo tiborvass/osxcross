@@ -135,8 +135,10 @@ for SDK in $SDKS; do
   # libc++ headers for C++11/C++14
   if [ -d $LIBCXXDIR1 ]; then
     cp -rf $LIBCXXDIR1 "$TMP/$SDK/usr/include/c++"
+    ln -s . "$TMP/$SDK/usr/include/c++/v1"
   elif [ -d $LIBCXXDIR2 ]; then
     cp -rf $LIBCXXDIR2 "$TMP/$SDK/usr/include/c++"
+    ln -s . "$TMP/$SDK/usr/include/c++/v1"
   fi
 
   if [ -d $MANDIR ]; then
